@@ -13,12 +13,31 @@ if __name__ == "__main__":
     # We set transparency to 0.5 and render the joint coordinates systems.
     c = (149 / 255, 85 / 255, 149 / 255, 0.5)
     seq_amass = SMPLSequence.from_amass(
-        npz_data_path=os.path.join(C.datasets.amass, "ACCAD/Female1Running_c3d/C2 - Run to stand_poses.npz"),
+        npz_data_path=os.path.join(C.datasets.amass, "ACCAD/Male2MartialArtsExtended_c3d/Extended 1_poses.npz"),
         fps_out=60.0,
         color=c,
         name="AMASS Running",
         show_joint_angles=True,
     )
+    # seq_amass2 = SMPLSequence.from_amass(
+    #     npz_data_path=os.path.join(C.datasets.amass, "CNRS/283/0_L_1_stageii.npz"),
+    #     fps_out=60.0,
+    #     start_frame=100,
+    #     color=c,
+    #     name="AMASS Running",
+    #     show_joint_angles=True,
+    #     position=np.array([1.0, 0.0, 0.0]),
+    # )
+    # seq_amass3 = SMPLSequence.from_amass(
+    #     npz_data_path=os.path.join(C.datasets.amass, "CNRS/283/0_L_1_stageii.npz"),
+    #     fps_out=60.0,
+    #     start_frame=500,
+    #     color=c,
+    #     name="AMASS Running",
+    #     show_joint_angles=True,
+    #     position=np.array([2.0, 0.0, 0.0]),
+    # )
+
 
     # Instead of displaying the mesh, we can also just display point clouds.
     #
@@ -28,11 +47,13 @@ if __name__ == "__main__":
     #
     # Move the point cloud a bit along the x-axis so it doesn't overlap with the mesh data.
     # Amass data need to be rotated to get the z axis up.
-    ptc_amass = PointClouds(seq_amass.vertices, position=np.array([1.0, 0.0, 0.0]), color=c, z_up=True)
+    # ptc_amass = PointClouds(seq_amass.vertices, position=np.array([1.0, 0.0, 0.0]), color=c, z_up=True)
 
     # Display in the viewer.
     v = Viewer()
     v.run_animations = True
     v.scene.camera.position = np.array([10.0, 2.5, 0.0])
-    v.scene.add(seq_amass, ptc_amass)
+    # v.scene.add(seq_amass, ptc_amass)
+    v.scene.add(seq_amass)
+    # v.scene.add(seq_amass, seq_amass2, seq_amass3)
     v.run()

@@ -1,12 +1,12 @@
 # Access SMPL models.
-smplx_models: "../data/smplx_models"
+smplx_models: "/home/geon/PycharmProjects/aitviewer/data/smplx_models"
 star_models: "../data/star_models"
 supr_models: "../data/supr_models"
 
 # Access to datasets.
 datasets:
   amass:
-    "../data/amass"
+    "/home/geon/PycharmProjects/aitviewer/data/amass"
 
 # Pytorch configuration.
 device: "cuda:0"

@@ -7,6 +7,7 @@ imgui.ini
 export/
 data/
 .vscode/
+.venv
 tests/failure/
 
 # Copied from https://github.com/github/gitignore/blob/main/Jekyll.gitignore
