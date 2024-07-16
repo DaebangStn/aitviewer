@@ -243,6 +243,86 @@ class SMPLSequence(Node):
         )
 
     @classmethod
+    def from_intergen(
+        cls,
+        pkl_data_path,
+        smpl_layer=None,
+        start_frame=None,
+        end_frame=None,
+        log=True,
+        fps_out=None,
+        z_up=True,
+        **kwargs,
+    ):
+        """Load a sequence downloaded from the AMASS website."""
+
+        intergen_data = np.load(pkl_data_path, allow_pickle=True)
+        person1_data = intergen_data['person1']
+        person2_data = intergen_data['person2']
+        if smpl_layer is None:
+            smpl_layer1 = SMPLLayer(model_type="smplh", gender=person1_data["gender"], device=C.device)
+            smpl_layer2 = SMPLLayer(model_type="smplh", gender=person2_data["gender"], device=C.device)
+        else:
+            smpl_layer1 = smpl_layer
+            smpl_layer2 = smpl_layer
+
+        if log:
+            print("Data keys available: {}".format(list(person1_data.keys())))
+            print("{:>6d} poses of size {:>4d}.".format(
+                person1_data["pose_body"].shape[0], person1_data["pose_body"].shape[1]))
+            print("{:>6d} trans of size {:>4d}.".format(
+                person1_data["trans"].shape[0], person1_data["trans"].shape[1]))
+            print("{:>6d} shape of size {:>4d}.".format(1, person1_data["betas"].shape[0]))
+            print(f"Gender p1({person1_data['gender']}) p2({person2_data['gender']})")
+            print("FPS {}".format(intergen_data["mocap_framerate"]))
+
+        sf = start_frame or 0
+        ef = end_frame or person1_data["pose_body"].shape[0]
+
+        poses1 = np.concatenate((person1_data["root_orient"], person1_data["pose_body"]), axis=1)
+        poses2 = np.concatenate((person2_data["root_orient"], person2_data["pose_body"]), axis=1)
+
+        poses1 = poses1[sf:ef]
+        trans1 = person1_data["trans"][sf:ef]
+        poses2 = poses2[sf:ef]
+        trans2 = person2_data["trans"][sf:ef]
+
+        if fps_out is not None:
+            fps_in = intergen_data["mocap_framerate"]
+            if fps_in != fps_out:
+                ps1 = np.reshape(poses1, [poses1.shape[0], -1, 3])
+                ps1_new = resample_rotations(ps1, fps_in, fps_out)
+                poses1 = np.reshape(ps1_new, [-1, poses1.shape[1]])
+                trans1 = resample_positions(trans1, fps_in, fps_out)
+                ps2 = np.reshape(poses2, [poses2.shape[0], -1, 3])
+                ps2_new = resample_rotations(ps2, fps_in, fps_out)
+                poses2 = np.reshape(ps2_new, [-1, poses2.shape[1]])
+                trans2 = resample_positions(trans2, fps_in, fps_out)
+
+        i_root_end = 3
+        i_body_end = i_root_end + smpl_layer1.bm.NUM_BODY_JOINTS * 3
+
+        p1_seq = cls(
+            poses_body=poses1[:, i_root_end:i_body_end],
+            poses_root=poses1[:, :i_root_end],
+            smpl_layer=smpl_layer1,
+            betas=person1_data["betas"][np.newaxis],
+            trans=trans1,
+            z_up=z_up,
+            **kwargs,
+        )
+        p2_seq = cls(
+            poses_body=poses2[:, i_root_end:i_body_end],
+            poses_root=poses2[:, :i_root_end],
+            smpl_layer=smpl_layer2,
+            betas=person2_data["betas"][np.newaxis],
+            trans=trans2,
+            z_up=z_up,
+            **kwargs,
+        )
+        return p1_seq, p2_seq
+
+    @classmethod
     def from_3dpw(cls, pkl_data_path, **kwargs):
         """Load a 3DPW sequence which might contain multiple people."""
         with open(pkl_data_path, "rb") as p:
